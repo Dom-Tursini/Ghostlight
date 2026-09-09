@@ -19,7 +19,11 @@ Ghostlight is a GPU TSDF scanner built around the Kinect v1. It records the raw 
 
 ---
 
-[Install and setup](INSTALL.md) · [How it works](TECHNICAL.md) · [Third-party notices](THIRD-PARTY-NOTICES.md)
+<p align="center">
+  <a href="INSTALL.md">Install and setup</a> ·
+  <a href="TECHNICAL.md">How it works</a> ·
+  <a href="THIRD-PARTY-NOTICES.md">Third-party notices</a>
+</p>
 
 <h2 align="center">Why this exists</h2>
 
