@@ -68,13 +68,7 @@ The saved recording is also useful when debugging failed scans.
 | Front end | Vue 3 |
 | Transport | Local WebSocket with raw depth and binary geometry buffers |
 
-### Sensor backends
-
-Capture sits behind `server/backend.py`, so nothing above it needs to know which backend is active.
-
-Only the Kinect SDK 1.8 backend is supported. Microsoft's driver owns the Kinect device on Windows, which is why OpenNI2 is not used there.
-
-An OpenNI2 backend is present in the tree and is selected when the SDK is unavailable, but it has never been run on real hardware and is not supported. Ghostlight has only been developed and tested on Windows.
+Ghostlight has only been developed and tested on Windows.
 
 ### Why TSDF instead of accumulating point clouds
 
