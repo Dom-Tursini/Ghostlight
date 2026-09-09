@@ -1,0 +1,16 @@
+node_modules
+dist
+.DS_Store
+*.local
+__pycache__
+*.pyc
+server/Log/
+server/runtime/OpenNI.ini
+
+# The bundled OpenNI2 runtime is not redistributed. It cannot open the Kinect on
+# Windows, where Microsoft's driver owns the device, and on Linux openni2.py
+# prefers the system libopenni2-0 package over this copy. Drop a runtime in here
+# if you want the fallback backend to load.
+server/runtime/OpenNI2.dll
+server/runtime/OpenNI2/
+server/runtime/OpenNI2-LICENSE.txt

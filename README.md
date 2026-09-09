@@ -51,136 +51,11 @@ Frames are re-registered during each fusion pass rather than replayed against th
 
 The saved recording is also useful when debugging failed scans.
 
-## Requirements
-
-### Hardware
-
-- Kinect v1, model 1414 or 1473
-- Kinect mains power adapter
-- NVIDIA GPU with CUDA
-- Minimum 8 GB VRAM for a typical object scan
-
-CUDA is currently required. Fusion, raycasting and ICP are CuPy kernels with no CPU fallback yet. Marching cubes runs on the CPU through scikit-image.
-
-Ghostlight was developed on an RTX 3090 using `sm_86` and CUDA 12.8.
-
-The app estimates VRAM usage before allocating the scan volume and rejects configurations that will not fit.
-
-### Software
-
-- Python 3.9 or newer
-- Node 18 or newer
-- Windows: Kinect for Windows SDK 1.8
-- Linux: `libopenni2-0`
-
-## Install
-
-```bash
-git clone https://github.com/<your-username>/ghostlight.git
-cd ghostlight
-
-npm install
-pip install -r server/requirements.txt
-```
-
-Install the CuPy package that matches your CUDA version:
-
-```bash
-pip install cupy-cuda12x
-```
-
-For CUDA 11:
-
-```bash
-pip install cupy-cuda11x
-```
-
-CuPy is not included in `requirements.txt` because its wheel depends on the installed CUDA major version.
-
-## Running it
-
-Ghostlight uses two processes.
-
-Start the front end:
-
-```bash
-npm run dev
-```
-
-Start the sensor service:
-
-```bash
-npm run server
-```
-
-Then open:
-
-```text
-http://localhost:5180
-```
-
-The service checks for the Kinect every two seconds, so the sensor can be connected while the application is already running.
-
-Without the sensor service, the front end falls back to mock state. This allows UI development without Kinect hardware connected.
-
-Recordings are stored in:
-
-```text
-~/Documents/Ghostlight/bundles
-```
-
-Expect roughly 250 MB per minute when recording colour. Recordings are not deleted automatically.
-
-## Kinect v1 on Windows
-
-Install **Kinect for Windows SDK 1.8 before plugging in the sensor**.
-
-Microsoft download:
-
-https://www.microsoft.com/en-us/download/details.aspx?id=40278
-
-Use SDK **1.8**, not 2.0. Kinect SDK 2.0 targets the Kinect v2.
-
-If Kinect drivers are already installed and the v1 is not enumerating correctly, uninstall the existing Kinect devices and reboot before installing SDK 1.8.
-
-With the SDK installed, connect the Kinect mains adapter and then USB.
-
-Device Manager should eventually show:
-
-```text
-Kinect for Windows Camera
-Kinect for Windows Device
-Kinect for Windows Audio Array Control
-Kinect for Windows Security Control
-```
-
-The camera entry is the important one.
-
-### Do not use Zadig on Windows
-
-Do not rebind the Kinect camera to libusbK or WinUSB.
-
-Ghostlight uses Microsoft's Kinect SDK on Windows. The SDK requires Microsoft's own driver, and rebinding the camera prevents `NuiInitialize` from opening the device.
-
-If you have already rebound it, uninstall the camera from Device Manager and scan for hardware changes to restore the Microsoft driver.
-
-Ghostlight detects this condition separately from a missing sensor.
-
-### Linux
-
-Install OpenNI2:
-
-```bash
-sudo apt install libopenni2-0
-```
-
-The Kinect should then enumerate without the Windows driver setup.
-
 ## How it works
 
 | Layer | Implementation |
 |---|---|
-| Capture | Kinect SDK 1.8 on Windows, OpenNI2 with PS1080 on Linux |
+| Capture | Kinect SDK 1.8 through `Kinect10.dll` |
 | Volume | Dense GPU TSDF using CuPy kernels in `server/gputsdf.py` |
 | Tracking | Frame-to-model point-to-plane ICP |
 | Alternative tracking | Optical markers solved before the scan |
@@ -192,16 +67,11 @@ The Kinect should then enumerate without the Windows driver setup.
 
 ### Sensor backends
 
-Windows and Linux use different capture backends behind the same interface.
+Capture sits behind `server/backend.py`, so nothing above it needs to know which backend is active.
 
-| Platform | Backend |
-|---|---|
-| Windows | Kinect SDK 1.8 through `Kinect10.dll` |
-| Linux | OpenNI2 with PS1080 |
+Only the Kinect SDK 1.8 backend is supported. Microsoft's driver owns the Kinect device on Windows, which is why OpenNI2 is not used there.
 
-Nothing above `server/backend.py` needs to know which backend is active.
-
-On Windows, Microsoft's driver owns the Kinect device, which is why OpenNI2 is not used there.
+An OpenNI2 backend is present in the tree and is selected when the SDK is unavailable, but it has never been run on real hardware and is not supported. Ghostlight has only been developed and tested on Windows.
 
 ### Why TSDF instead of accumulating point clouds
 
@@ -325,6 +195,121 @@ The backend interface was written to allow other sensors, but support will not b
 #### No packaging yet
 
 The current setup still requires Python, CUDA, Node and a terminal.
+
+## Requirements
+
+### Hardware
+
+- Kinect v1, model 1414 or 1473
+- Kinect mains power adapter
+- NVIDIA GPU with CUDA
+- Minimum 8 GB VRAM for a typical object scan
+
+CUDA is currently required. Fusion, raycasting and ICP are CuPy kernels with no CPU fallback yet. Marching cubes runs on the CPU through scikit-image.
+
+Ghostlight was developed on an RTX 3090 using `sm_86` and CUDA 12.8.
+
+The app estimates VRAM usage before allocating the scan volume and rejects configurations that will not fit.
+
+### Software
+
+- Windows
+- Python 3.9 or newer
+- Node 18 or newer
+- Kinect for Windows SDK 1.8
+
+## Install
+
+```bash
+git clone https://github.com/<your-username>/ghostlight.git
+cd ghostlight
+
+npm install
+pip install -r server/requirements.txt
+```
+
+Install the CuPy package that matches your CUDA version:
+
+```bash
+pip install cupy-cuda12x
+```
+
+For CUDA 11:
+
+```bash
+pip install cupy-cuda11x
+```
+
+CuPy is not included in `requirements.txt` because its wheel depends on the installed CUDA major version.
+
+## Running it
+
+Ghostlight uses two processes.
+
+Start the front end:
+
+```bash
+npm run dev
+```
+
+Start the sensor service:
+
+```bash
+npm run server
+```
+
+Then open:
+
+```text
+http://localhost:5180
+```
+
+The service checks for the Kinect every two seconds, so the sensor can be connected while the application is already running.
+
+Without the sensor service, the front end falls back to mock state. This allows UI development without Kinect hardware connected.
+
+Recordings are stored in:
+
+```text
+~/Documents/Ghostlight/bundles
+```
+
+Expect roughly 250 MB per minute when recording colour. Recordings are not deleted automatically.
+
+## Kinect v1 on Windows
+
+Install **Kinect for Windows SDK 1.8 before plugging in the sensor**.
+
+Microsoft download:
+
+https://www.microsoft.com/en-us/download/details.aspx?id=40278
+
+Use SDK **1.8**, not 2.0. Kinect SDK 2.0 targets the Kinect v2.
+
+If Kinect drivers are already installed and the v1 is not enumerating correctly, uninstall the existing Kinect devices and reboot before installing SDK 1.8.
+
+With the SDK installed, connect the Kinect mains adapter and then USB.
+
+Device Manager should eventually show:
+
+```text
+Kinect for Windows Camera
+Kinect for Windows Device
+Kinect for Windows Audio Array Control
+Kinect for Windows Security Control
+```
+
+The camera entry is the important one.
+
+### Do not use Zadig on Windows
+
+Do not rebind the Kinect camera to libusbK or WinUSB.
+
+Ghostlight uses Microsoft's Kinect SDK on Windows. The SDK requires Microsoft's own driver, and rebinding the camera prevents `NuiInitialize` from opening the device.
+
+If you have already rebound it, uninstall the camera from Device Manager and scan for hardware changes to restore the Microsoft driver.
+
+Ghostlight detects this condition separately from a missing sensor.
 
 ## Contributing
 
