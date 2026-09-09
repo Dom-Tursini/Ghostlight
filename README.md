@@ -19,6 +19,8 @@ Ghostlight is a GPU TSDF scanner built around the Kinect v1. It records the raw 
 
 ---
 
+[Install and setup](INSTALL.md) · [How it works](TECHNICAL.md) · [Third-party notices](THIRD-PARTY-NOTICES.md)
+
 ## Why this exists
 
 The Kinect v1 hardware still works, but most of the software around it has not aged well.
@@ -44,68 +46,7 @@ The workflow is split into six stages:
 | **Refine** | Crop, remove the turntable, remove loose parts, smooth and simplify |
 | **Export** | Export STL, PLY, OBJ or GLB |
 
-### Record first, fuse later
-
-Ghostlight does not permanently lock the reconstruction resolution when you start scanning.
-
-The raw frames are written to disk during capture. You can fuse the same recording at 3 mm, inspect it, then run it again at 1 mm without rescanning the object if your VRAM permits.
-
-Frames are re-registered during each fusion pass rather than replayed against the original poses. A finer reconstruction can therefore also improve tracking because ICP has a sharper model to register against.
-
-The saved recording is also useful when debugging failed scans.
-
-## How it works
-
-| Layer | Implementation |
-|---|---|
-| Capture | Kinect SDK 1.8 through `Kinect10.dll` |
-| Volume | Dense GPU TSDF using CuPy kernels in `server/gputsdf.py` |
-| Tracking | Frame-to-model point-to-plane ICP |
-| Alternative tracking | Optical markers solved before the scan |
-| Recording | Raw depth and colour frames written to disk |
-| Surface reconstruction | Marching cubes, scikit-image on the CPU |
-| Cleanup | Non-destructive Open3D operation stack |
-| Front end | Vue 3 |
-| Transport | Local WebSocket with raw depth and binary geometry buffers |
-
-Ghostlight has only been developed and tested on Windows.
-
-### Why TSDF instead of accumulating point clouds
-
-An earlier version of Ghostlight registered each frame against an accumulated point cloud.
-
-That works, but every frame adds another noisy copy of the same surface. Registration error causes surfaces to become thicker as more frames are added.
-
-A TSDF stores a weighted signed distance for each voxel. Repeated observations of the same surface are averaged into the volume instead of being stacked on top of each other.
-
-### Tracking failure detection
-
-A low tracking score does not always mean the same thing.
-
-Ghostlight distinguishes between cases such as:
-
-- nothing being inside the scan volume
-- geometry that cannot constrain the camera pose
-- movement that is too fast to track
-
-It also detects degenerate geometry such as a flat wall or a smooth object viewed from one direction.
-
-These scenes can report good ICP fitness while still allowing the estimated pose to slide along an unconstrained axis. Ghostlight detects this using the conditioning of the ICP normal equations.
-
-This is particularly relevant for turntable scanning, where an unnoticed tracking ambiguity can smear the subject around the rotation axis.
-
-### Marker tracking
-
-Marker tracking uses a separate survey pass before geometry scanning begins.
-
-Marker positions are solved globally and then locked for the scan. This avoids adding markers incrementally while also accumulating their initial positioning error.
-
-The solve alternates between:
-
-1. solving frame poses against fixed marker positions
-2. solving marker positions against fixed frame poses
-
-Frame poses use a Kabsch fit and marker positions use the mean of their observations.
+Recording is separate from reconstruction. The raw frames go to disk during capture, so the same take can be fused again at a finer voxel size without rescanning the object.
 
 ## Project status
 
@@ -131,182 +72,27 @@ Ghostlight is functional, but still under active development.
 
 ### Known gaps
 
-#### Turntable axis tracking
+**Turntable axis tracking is not connected.** `geometry.axis_from_poses` can already recover the axis from a sequence of poses. Constraining tracking to rotation around that axis should remove a large source of turntable drift.
 
-Turntable axis tracking is not connected to the main tracking pipeline yet.
+**Marker tracking needs more hardware testing.** Marker detection works against recorded Kinect frames, but the complete survey, global solve and locked-framework scan pipeline has only been demonstrated with synthetic data.
 
-`geometry.axis_from_poses` can already recover the axis from a sequence of poses. Constraining tracking to rotation around that axis should remove a large source of turntable drift.
+**Marker viewing angle.** Small markers become difficult to detect at shallow viewing angles. Testing with 10 mm markers showed that around 40 degrees of elevation is needed for reliable detection. The UI does not warn about this.
 
-#### Marker tracking needs more hardware testing
+**No test suite yet.** Synthetic scene harnesses exist for running the pipeline without Kinect hardware, but they have not been committed or connected to CI.
 
-Marker detection works against recorded Kinect frames.
+**NVIDIA only.** There is no CPU or OpenCL fusion backend.
 
-The complete survey, global solve and locked-framework scan pipeline has only been demonstrated with synthetic data so far.
+**Open3D cleanup runs on CPU.** The current Open3D wheel performs the Refine operations on the CPU.
 
-#### Marker viewing angle
+**Colour meshing does not work.** The volume can average colour into its voxels and the mesh writers can carry vertex colours, but the result is too muddy to be worth anything, so the option has been taken out of the interface. Exports are geometry only. Colour is still useful for tracking.
 
-Small markers become difficult to detect at shallow viewing angles.
+**Mock and real front-end state are separate.** Mock state still exists alongside the real application state in `src/composables/useSession.js`. These paths should eventually be merged.
 
-Testing with 10 mm markers showed that around 40 degrees of elevation is needed for reliable detection. The UI does not currently warn about this.
+**Tracking thresholds need more real-world validation.** The current conditioning and movement thresholds were calibrated against synthetic scenes with known ground truth. They behave correctly on the real data tested so far, but need a larger hardware test set.
 
-#### No repository test suite yet
+**Kinect v2 and RealSense are not supported.** The backend interface was written to allow other sensors, but support will not be claimed until those backends have been tested on real hardware.
 
-Synthetic scene harnesses exist for running the pipeline without Kinect hardware, but they have not yet been committed or connected to CI.
-
-#### NVIDIA only
-
-There is currently no CPU or OpenCL fusion backend.
-
-#### Open3D cleanup runs on CPU
-
-The current Open3D wheel performs the Refine operations on the CPU.
-
-#### Colour meshing does not work
-
-The volume can average colour into its voxels and the mesh writers can carry
-vertex colours, but the result is too muddy to be worth anything, so the option
-has been taken out of the interface. Exports are geometry only.
-
-Colour is still useful for tracking. It is not useful for the final surface.
-
-#### Mock and real front-end state are separate
-
-Mock state still exists alongside the real application state in:
-
-```text
-src/composables/useSession.js
-```
-
-These paths should eventually be merged.
-
-#### Tracking thresholds need more real-world validation
-
-The current conditioning and movement thresholds were calibrated against synthetic scenes with known ground truth.
-
-They behave correctly on the real data tested so far, but need a larger hardware test set.
-
-#### Kinect v2 and RealSense are not supported
-
-The backend interface was written to allow other sensors, but support will not be claimed until those backends have been tested on real hardware.
-
-#### No packaging yet
-
-The current setup still requires Python, CUDA, Node and a terminal.
-
-## Requirements
-
-### Hardware
-
-- Kinect v1, model 1414 or 1473
-- Kinect mains power adapter
-- NVIDIA GPU with CUDA
-- Minimum 8 GB VRAM for a typical object scan
-
-CUDA is currently required. Fusion, raycasting and ICP are CuPy kernels with no CPU fallback yet. Marching cubes runs on the CPU through scikit-image.
-
-Ghostlight was developed on an RTX 3090 using `sm_86` and CUDA 12.8.
-
-The app estimates VRAM usage before allocating the scan volume and rejects configurations that will not fit.
-
-### Software
-
-- Windows
-- Python 3.9 or newer
-- Node 18 or newer
-- Kinect for Windows SDK 1.8
-
-## Install
-
-```bash
-git clone https://github.com/<your-username>/ghostlight.git
-cd ghostlight
-
-npm install
-pip install -r server/requirements.txt
-```
-
-Install the CuPy package that matches your CUDA version:
-
-```bash
-pip install cupy-cuda12x
-```
-
-For CUDA 11:
-
-```bash
-pip install cupy-cuda11x
-```
-
-CuPy is not included in `requirements.txt` because its wheel depends on the installed CUDA major version.
-
-## Running it
-
-Ghostlight uses two processes.
-
-Start the front end:
-
-```bash
-npm run dev
-```
-
-Start the sensor service:
-
-```bash
-npm run server
-```
-
-Then open:
-
-```text
-http://localhost:5180
-```
-
-The service checks for the Kinect every two seconds, so the sensor can be connected while the application is already running.
-
-Without the sensor service, the front end falls back to mock state. This allows UI development without Kinect hardware connected.
-
-Recordings are stored in:
-
-```text
-~/Documents/Ghostlight/bundles
-```
-
-Expect roughly 250 MB per minute when recording colour. Recordings are not deleted automatically.
-
-## Kinect v1 on Windows
-
-Install **Kinect for Windows SDK 1.8 before plugging in the sensor**.
-
-Microsoft download:
-
-https://www.microsoft.com/en-us/download/details.aspx?id=40278
-
-Use SDK **1.8**, not 2.0. Kinect SDK 2.0 targets the Kinect v2.
-
-If Kinect drivers are already installed and the v1 is not enumerating correctly, uninstall the existing Kinect devices and reboot before installing SDK 1.8.
-
-With the SDK installed, connect the Kinect mains adapter and then USB.
-
-Device Manager should eventually show:
-
-```text
-Kinect for Windows Camera
-Kinect for Windows Device
-Kinect for Windows Audio Array Control
-Kinect for Windows Security Control
-```
-
-The camera entry is the important one.
-
-### Do not use Zadig on Windows
-
-Do not rebind the Kinect camera to libusbK or WinUSB.
-
-Ghostlight uses Microsoft's Kinect SDK on Windows. The SDK requires Microsoft's own driver, and rebinding the camera prevents `NuiInitialize` from opening the device.
-
-If you have already rebound it, uninstall the camera from Device Manager and scan for hardware changes to restore the Microsoft driver.
-
-Ghostlight detects this condition separately from a missing sensor.
+**No packaging yet.** The current setup still requires Python, CUDA, Node and a terminal.
 
 ## Contributing
 
@@ -331,8 +117,7 @@ Some useful areas to work on:
 
 If you fix a problem, include a short note describing what you observed and why the change works.
 
-Several of the less obvious implementation decisions are documented in the module docstrings, including approaches that were tested and later removed.
-
 ## License
+
 Ghostlight is licensed under the GNU General Public License v3.0 (GPLv3).
 You are free to use, modify and redistribute the project under the terms of the GPLv3. If you distribute modified versions, the corresponding source code must remain available under the same license.
