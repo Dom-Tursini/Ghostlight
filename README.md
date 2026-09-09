@@ -11,6 +11,7 @@ Ghostlight is a GPU TSDF scanner built around the Kinect v1. It records the raw 
 
 Why the name Ghostlight?
 In a theatre, a ghost light is the last light left burning on stage after everyone has gone home.
+
 ---
 
 <p align="center">
