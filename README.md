@@ -2,7 +2,9 @@
 
 Open-source 3D scanning for the original Xbox Kinect, running on modern Nvidia GPUs and Windows.
 
-![Ghostlight](public/brand/logo.svg)
+<p align="center">
+  <img src="public/brand/logo.svg" alt="Ghostlight" width="520">
+</p>
 
 Ghostlight is a GPU TSDF scanner built around the Kinect v1. It records the raw depth and colour frames, reconstructs them separately, provides a browser-based workflow for cleanup, and exports the result as a standard 3D mesh.
 
