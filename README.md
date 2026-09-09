@@ -124,7 +124,7 @@ Issues and pull requests are both fine. Everything under What does not work well
 
 [TECHNICAL.md](TECHNICAL.md) covers how the pipeline fits together, and the module docstrings explain most of the less obvious decisions, including things that were tried and thrown away. If you fix something, a short note on what you saw and why the change works is more useful to me than a tidy diff.
 
-If you use AI in your workflow, [AGENTS.md](AGENTS.md) is a detailed breakdown of the software written for that: the layout, the wire protocol, the coordinate conventions, the tunable constants and the parts that will bite you. Point your assistant at it and it should save you an exploration pass.
+If you use AI in your workflow, [AGENTS.md](AGENTS.md) is detailed context of the repo written for that: the layout, the wire protocol, the coordinate conventions, the tunable constants and the parts that might cause issues. Point your assistant at it and it should save you an exploration pass.
 
 <h2 align="center">License</h2>
 
