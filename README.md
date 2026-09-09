@@ -50,7 +50,7 @@ Recording is separate from reconstruction. The raw frames go to disk during capt
 
 ## Project status
 
-Ghostlight is functional, but still under active development.
+This is an early release. The core pipeline works and produces meshes, but plenty of it is rough and some of it is broken. I welcome contributors who want to help work on it.
 
 ### Working
 
@@ -62,37 +62,39 @@ Ghostlight is functional, but still under active development.
 - STL, PLY, OBJ and GLB export
 - Raw recording and later re-fusion
 - Re-fusion at different voxel sizes
-- Turntable plane fitting and removal
-- Scan volume positioning above the turntable
 - Tracking failure classification
 - VRAM estimation and allocation limits
 - Marker detection with local contrast thresholding
 - Marker physical-size filtering
 - Marker plane constraints
 
-### Known gaps
+### What does not work well
 
-**Turntable axis tracking is not connected.** `geometry.axis_from_poses` can already recover the axis from a sequence of poses. Constraining tracking to rotation around that axis should remove a large source of turntable drift.
+#### Broken
 
-**Marker tracking needs more hardware testing.** Marker detection works against recorded Kinect frames, but the complete survey, global solve and locked-framework scan pipeline has only been demonstrated with synthetic data.
+- **Bounding box.** The preset buttons are decoupled from the sliders and the box does not update correctly.
+- **Turntable plane fitting and removal.** Unreliable.
+- **Scan volume positioning above the turntable.** Unreliable, and tied to the same problem.
+- **Colour meshing.** Voxel-averaged colour comes out too muddy to use, so the option has been removed from the interface. Exports are geometry only. Colour is still useful for tracking.
 
-**Marker viewing angle.** Small markers become difficult to detect at shallow viewing angles. Testing with 10 mm markers showed that around 40 degrees of elevation is needed for reliable detection. The UI does not warn about this.
+Expect other bugs. Very little of this has been through a second pair of hands.
 
-**No test suite yet.** Synthetic scene harnesses exist for running the pipeline without Kinect hardware, but they have not been committed or connected to CI.
+#### Needs work
 
-**NVIDIA only.** There is no CPU or OpenCL fusion backend.
+- **Tracking.** Usable, but it drifts and loses lock more often than it should.
+- **Tracking thresholds.** Calibrated against synthetic scenes with known ground truth. They hold up on the real data tested so far, but the sample is small.
+- **Marker tracking on real hardware.** Detection works against recorded frames. The full survey, solve and locked scan has only been demonstrated with synthetic data.
+- **Marker viewing angle.** Small markers get hard to detect at shallow angles. 10 mm markers need roughly 40 degrees of elevation. The interface does not warn you.
 
-**Open3D cleanup runs on CPU.** The current Open3D wheel performs the Refine operations on the CPU.
+#### Not built yet
 
-**Colour meshing does not work.** The volume can average colour into its voxels and the mesh writers can carry vertex colours, but the result is too muddy to be worth anything, so the option has been taken out of the interface. Exports are geometry only. Colour is still useful for tracking.
-
-**Mock and real front-end state are separate.** Mock state still exists alongside the real application state in `src/composables/useSession.js`. These paths should eventually be merged.
-
-**Tracking thresholds need more real-world validation.** The current conditioning and movement thresholds were calibrated against synthetic scenes with known ground truth. They behave correctly on the real data tested so far, but need a larger hardware test set.
-
-**Kinect v2 and RealSense are not supported.** The backend interface was written to allow other sensors, but support will not be claimed until those backends have been tested on real hardware.
-
-**No packaging yet.** The current setup still requires Python, CUDA, Node and a terminal.
+- **Turntable axis tracking.** `geometry.axis_from_poses` already recovers the axis from a sequence of poses, but nothing uses it. Constraining tracking to that axis should remove a lot of turntable drift.
+- **Packaging.** Still needs Python, CUDA, Node and a terminal.
+- **Tests and CI.** Synthetic scene harnesses exist but have not been committed or wired up.
+- **A non-NVIDIA path.** No CPU or OpenCL fusion backend.
+- **GPU cleanup.** The current Open3D wheel runs the Refine operations on the CPU.
+- **Other sensors.** The backend interface allows for Kinect v2 and RealSense, but neither has been tested, so neither is claimed.
+- **One source of front-end state.** Mock state still sits alongside the real state in `src/composables/useSession.js`.
 
 ## Contributing
 
