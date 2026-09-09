@@ -98,26 +98,33 @@ Expect other bugs. Very little of this has been through a second pair of hands.
 
 ## Contributing
 
-Contributions are welcome.
+Come and build this with me.
 
-Some useful areas to work on:
+Ghostlight is early enough that there is real room to shape it, and one person cannot test a scanner properly on their own. If you have a Kinect sitting in a cupboard, the most useful thing you can do is run a scan and tell me what went wrong. Bug reports from hardware I do not own are worth as much as code.
+
+You do not need to ask first. Open an issue, or open a pull request and we will work it out there.
+
+Everything under [What does not work well](#what-does-not-work-well) is fair game. If you want somewhere specific to start:
 
 - **Turntable axis tracking**  
-  Connect `geometry.axis_from_poses` to the tracker and constrain turntable scans to the recovered axis.
+  `geometry.axis_from_poses` already recovers the axis. Connect it to the tracker and constrain turntable scans to it. Probably the single biggest quality win available right now.
 
-- **CPU or OpenCL TSDF backend**  
-  The CUDA kernels in `server/gputsdf.py` are relatively self-contained and provide a starting point for another backend.
+- **The bounding box bugs**  
+  Self-contained, front-end only, and you do not need a Kinect to reproduce them. A good first change.
 
-- **Synthetic tests and CI**  
-  Move the existing synthetic scene harnesses into the repository and make the pipeline testable without a Kinect.
+- **A CPU or OpenCL fusion backend**  
+  The CUDA kernels in `server/gputsdf.py` are fairly self-contained and are a reasonable starting point for a second implementation. This would open the project up to everyone without an NVIDIA card.
 
-- **Additional sensor backends**  
-  Kinect v2 and RealSense can be implemented behind `server/backend.py`.
+- **Tests and CI**  
+  The synthetic scene harnesses exist but are not in the repository yet. Getting the pipeline testable without hardware would help every other change on this list.
 
-- **Better colour reconstruction**  
-  Sample vertex colour from suitable recorded keyframes instead of averaging colour into the TSDF voxels.
+- **Other sensors**  
+  Kinect v2 and RealSense can sit behind `server/backend.py` alongside the existing backends.
 
-If you fix a problem, include a short note describing what you observed and why the change works.
+- **Better colour**  
+  Sample vertex colour from suitable recorded keyframes instead of averaging it into the TSDF voxels.
+
+[TECHNICAL.md](TECHNICAL.md) covers how the pipeline fits together, and the module docstrings explain most of the less obvious decisions, including things that were tried and thrown away. If you fix something, a short note on what you saw and why the change works is more useful to me than a tidy diff.
 
 ## License
 
