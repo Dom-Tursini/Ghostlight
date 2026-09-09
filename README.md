@@ -48,6 +48,14 @@ The workflow is split into six stages:
 
 Recording is separate from reconstruction. The raw frames go to disk during capture, so the same take can be fused again at a finer voxel size without rescanning the object.
 
+---
+
+<p align="center">
+  <img src="public/brand/GL_Prepare.png" alt="Ghostlight" width="520">
+</p>
+
+---
+
 <h2 align="center">Project status</h2>
 
 This is an early release. The core pipeline works and produces meshes, but plenty of it is rough and some of it is broken. I welcome contributors who want to help work on it.
