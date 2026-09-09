@@ -51,7 +51,7 @@ Recording is separate from reconstruction. The raw frames go to disk during capt
 ---
 
 <p align="center">
-  <img src="public/brand/GL_Prepare.png" alt="Ghostlight" width="520">
+  <img src="public/brand/GL_Prepare.png" alt="prepare screen" width="520">
 </p>
 
 ---
