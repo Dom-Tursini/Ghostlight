@@ -21,7 +21,7 @@ Ghostlight is a GPU TSDF scanner built around the Kinect v1. It records the raw 
 
 [Install and setup](INSTALL.md) · [How it works](TECHNICAL.md) · [Third-party notices](THIRD-PARTY-NOTICES.md)
 
-## Why this exists
+<h2 align="center">Why this exists</h2>
 
 The Kinect v1 hardware still works, but most of the software around it has not aged well.
 
@@ -33,7 +33,7 @@ The Kinect itself provides 640x480 depth at 30 Hz with a registered colour strea
 
 Ghostlight replaces the old software stack while keeping the original sensor.
 
-## What it does
+<h2 align="center">What it does</h2>
 
 The workflow is split into six stages:
 
@@ -48,7 +48,7 @@ The workflow is split into six stages:
 
 Recording is separate from reconstruction. The raw frames go to disk during capture, so the same take can be fused again at a finer voxel size without rescanning the object.
 
-## Project status
+<h2 align="center">Project status</h2>
 
 This is an early release. The core pipeline works and produces meshes, but plenty of it is rough and some of it is broken. I welcome contributors who want to help work on it.
 
@@ -96,15 +96,13 @@ Expect other bugs. Very little of this has been through a second pair of hands.
 - **Other sensors.** The backend interface allows for Kinect v2 and RealSense, but neither has been tested, so neither is claimed.
 - **One source of front-end state.** Mock state still sits alongside the real state in `src/composables/useSession.js`.
 
-## Contributing
+<h2 align="center">Contributing</h2>
 
-Come and build this with me.
+Contributions are welcome, and there is plenty here that needs them.
 
-Ghostlight is early enough that there is real room to shape it, and one person cannot test a scanner properly on their own. If you have a Kinect sitting in a cupboard, the most useful thing you can do is run a scan and tell me what went wrong. Bug reports from hardware I do not own are worth as much as code.
+One person cannot test a scanner properly on their own. If you have a Kinect and something goes wrong, a bug report against hardware I do not own is as useful as a patch.
 
-You do not need to ask first. Open an issue, or open a pull request and we will work it out there.
-
-Everything under [What does not work well](#what-does-not-work-well) is fair game. If you want somewhere specific to start:
+Issues and pull requests are both fine. Everything under What does not work well is fair game, and if you want somewhere specific to start:
 
 - **Turntable axis tracking**  
   `geometry.axis_from_poses` already recovers the axis. Connect it to the tracker and constrain turntable scans to it. Probably the single biggest quality win available right now.
@@ -126,7 +124,7 @@ Everything under [What does not work well](#what-does-not-work-well) is fair gam
 
 [TECHNICAL.md](TECHNICAL.md) covers how the pipeline fits together, and the module docstrings explain most of the less obvious decisions, including things that were tried and thrown away. If you fix something, a short note on what you saw and why the change works is more useful to me than a tidy diff.
 
-## License
+<h2 align="center">License</h2>
 
 Ghostlight is licensed under the GNU General Public License v3.0 (GPLv3).
 You are free to use, modify and redistribute the project under the terms of the GPLv3. If you distribute modified versions, the corresponding source code must remain available under the same license.
